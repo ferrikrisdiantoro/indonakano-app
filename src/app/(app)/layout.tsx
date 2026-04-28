@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types/database";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { SiteHeader } from "@/components/layout/site-header";
+import { AppShell } from "@/components/layout/app-shell";
 
 interface UserProfile {
   nama: string;
@@ -51,19 +50,12 @@ export default async function AppLayout({
   const pendingCount = await getPendingCount(supabase);
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <AppSidebar
-        userName={profile.nama}
-        userRole={profile.role}
-        pendingCount={pendingCount}
-      />
-
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <SiteHeader />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 animate-fade-in">
-          {children}
-        </main>
-      </div>
-    </div>
+    <AppShell
+      userName={profile.nama}
+      userRole={profile.role}
+      pendingCount={pendingCount}
+    >
+      {children}
+    </AppShell>
   );
 }
