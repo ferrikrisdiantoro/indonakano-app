@@ -132,7 +132,7 @@ function HargaFormDialog({
             <Input
               type="number"
               min={0}
-              step={100}
+              step={1}
               value={harga}
               onChange={(e) => setHarga(e.target.value)}
               placeholder="0"

@@ -173,8 +173,9 @@ CREATE TABLE public.stok_gudang (
 );
 
 -- Auto-create stok_gudang row whenever a new alat is added
+-- SECURITY DEFINER = runs as table owner, bypasses RLS policy on stok_gudang
 CREATE OR REPLACE FUNCTION public.init_stok_gudang_on_alat()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   INSERT INTO public.stok_gudang (alat_id, qty_tersedia)
   VALUES (NEW.id, 0)
@@ -553,7 +554,10 @@ CREATE POLICY "harga_update_admin_unlocked" ON public.harga_sewa
 CREATE POLICY "stok_gudang_select" ON public.stok_gudang
   FOR SELECT TO authenticated USING (TRUE);
 
--- Direct update only by admin (automated via SECURITY DEFINER functions)
+-- Admin: insert (untuk migrasi data) & update
+CREATE POLICY "stok_gudang_insert_admin" ON public.stok_gudang
+  FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+
 CREATE POLICY "stok_gudang_update_admin" ON public.stok_gudang
   FOR UPDATE TO authenticated USING (public.is_admin());
 
