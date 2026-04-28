@@ -128,6 +128,7 @@ function NavItemRow({ item, depth = 0, onNavigate }: { item: NavItem; depth?: nu
     <Link
       href={item.href!}
       onClick={onNavigate}
+      prefetch={true}
       className={cn(
         "relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all",
         isActive

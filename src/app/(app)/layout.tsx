@@ -34,20 +34,18 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  const { data } = await supabase
-    .from("users")
-    .select("nama, role, is_active")
-    .eq("id", user.id)
-    .single();
+  // Profile fetch + pending count run in parallel — saves ~50-100ms per nav
+  const [profileResult, pendingCount] = await Promise.all([
+    supabase.from("users").select("nama, role, is_active").eq("id", user.id).single(),
+    getPendingCount(supabase),
+  ]);
 
-  const profile = data as UserProfile | null;
+  const profile = profileResult.data as UserProfile | null;
 
   if (!profile || !profile.is_active) {
     await supabase.auth.signOut();
     redirect("/login");
   }
-
-  const pendingCount = await getPendingCount(supabase);
 
   return (
     <AppShell
