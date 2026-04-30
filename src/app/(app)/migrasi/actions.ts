@@ -8,6 +8,17 @@ type ActionResult<T = undefined> =
   | { success: true; data?: T }
   | { success: false; error: string };
 
+// Normalize kode for duplicate comparison: strip non-alphanumeric, uppercase.
+// Treats "MF-170", "MF170", "mf 170" as the same kode.
+function normalizeKode(s: string | null | undefined): string {
+  return (s ?? "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+// Normalize nama for duplicate comparison: trim, lowercase, collapse whitespace.
+function normalizeNama(s: string | null | undefined): string {
+  return (s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 // ── Import Alat ───────────────────────────────────────────────
 
 export interface AlatImportRow {
@@ -18,17 +29,43 @@ export interface AlatImportRow {
 
 export async function importAlatAction(
   rows: AlatImportRow[]
-): Promise<ActionResult<{ inserted: number; skipped: number }>> {
+): Promise<ActionResult<{ inserted: number; skipped: number; errors: string[] }>> {
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: existing } = await supabase.from("alat").select("kode");
-  const existingKodes = new Set((existing ?? []).map((r: { kode: string }) => r.kode));
+  const { data: existing } = await supabase.from("alat").select("kode, nama");
+  const seenKodes = new Set(
+    (existing ?? []).map((r: { kode: string; nama: string }) => normalizeKode(r.kode))
+  );
+  const seenNamas = new Set(
+    (existing ?? []).map((r: { kode: string; nama: string }) => normalizeNama(r.nama))
+  );
 
-  const toInsert = rows.filter((r) => r.kode && r.nama && !existingKodes.has(r.kode));
+  const errors: string[] = [];
+  const toInsert: AlatImportRow[] = [];
+
+  for (const r of rows) {
+    if (!r.kode || !r.nama) {
+      errors.push(`Baris dilewati: kode/nama kosong`);
+      continue;
+    }
+    const nKode = normalizeKode(r.kode);
+    const nNama = normalizeNama(r.nama);
+    if (seenKodes.has(nKode)) {
+      errors.push(`Kode mirip sudah ada: ${r.kode} (cocok dengan alat lain)`);
+      continue;
+    }
+    if (seenNamas.has(nNama)) {
+      errors.push(`Nama sudah ada: ${r.nama} (kode upload: ${r.kode})`);
+      continue;
+    }
+    seenKodes.add(nKode);
+    seenNamas.add(nNama);
+    toInsert.push(r);
+  }
+
   const skipped = rows.length - toInsert.length;
-
-  if (toInsert.length === 0) return { success: true, data: { inserted: 0, skipped } };
+  if (toInsert.length === 0) return { success: true, data: { inserted: 0, skipped, errors } };
 
   const { error } = await supabase.from("alat").insert(
     toInsert.map((r) => ({
@@ -41,7 +78,7 @@ export async function importAlatAction(
 
   if (error) return { success: false, error: error.message };
   revalidatePath("/master/alat");
-  return { success: true, data: { inserted: toInsert.length, skipped } };
+  return { success: true, data: { inserted: toInsert.length, skipped, errors } };
 }
 
 // ── Import Klien ──────────────────────────────────────────────
@@ -55,17 +92,43 @@ export interface KlienImportRow {
 
 export async function importKlienAction(
   rows: KlienImportRow[]
-): Promise<ActionResult<{ inserted: number; skipped: number }>> {
+): Promise<ActionResult<{ inserted: number; skipped: number; errors: string[] }>> {
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: existing } = await supabase.from("klien").select("kode");
-  const existingKodes = new Set((existing ?? []).map((r: { kode: string }) => r.kode));
+  const { data: existing } = await supabase.from("klien").select("kode, nama");
+  const seenKodes = new Set(
+    (existing ?? []).map((r: { kode: string; nama: string }) => normalizeKode(r.kode))
+  );
+  const seenNamas = new Set(
+    (existing ?? []).map((r: { kode: string; nama: string }) => normalizeNama(r.nama))
+  );
 
-  const toInsert = rows.filter((r) => r.kode && r.nama && !existingKodes.has(r.kode));
+  const errors: string[] = [];
+  const toInsert: KlienImportRow[] = [];
+
+  for (const r of rows) {
+    if (!r.kode || !r.nama) {
+      errors.push(`Baris dilewati: kode/nama kosong`);
+      continue;
+    }
+    const nKode = normalizeKode(r.kode);
+    const nNama = normalizeNama(r.nama);
+    if (seenKodes.has(nKode)) {
+      errors.push(`Kode mirip sudah ada: ${r.kode}`);
+      continue;
+    }
+    if (seenNamas.has(nNama)) {
+      errors.push(`Nama sudah ada: ${r.nama} (kode upload: ${r.kode})`);
+      continue;
+    }
+    seenKodes.add(nKode);
+    seenNamas.add(nNama);
+    toInsert.push(r);
+  }
+
   const skipped = rows.length - toInsert.length;
-
-  if (toInsert.length === 0) return { success: true, data: { inserted: 0, skipped } };
+  if (toInsert.length === 0) return { success: true, data: { inserted: 0, skipped, errors } };
 
   const { error } = await supabase.from("klien").insert(
     toInsert.map((r) => ({
@@ -79,7 +142,7 @@ export async function importKlienAction(
 
   if (error) return { success: false, error: error.message };
   revalidatePath("/master/klien");
-  return { success: true, data: { inserted: toInsert.length, skipped } };
+  return { success: true, data: { inserted: toInsert.length, skipped, errors } };
 }
 
 // ── Import Stok Gudang ────────────────────────────────────────
@@ -97,14 +160,14 @@ export async function importStokGudangAction(
 
   const { data: alatRaw } = await supabase.from("alat").select("id, kode");
   const alatByKode = new Map(
-    (alatRaw ?? []).map((a: { id: string; kode: string }) => [a.kode, a.id])
+    (alatRaw ?? []).map((a: { id: string; kode: string }) => [normalizeKode(a.kode), a.id])
   );
 
   const errors: string[] = [];
   const toUpsert: { alat_id: string; qty_tersedia: number }[] = [];
 
   for (const row of rows) {
-    const alatId = alatByKode.get(row.kode_alat?.trim().toUpperCase() ?? "");
+    const alatId = alatByKode.get(normalizeKode(row.kode_alat));
     if (!alatId) { errors.push(`Alat tidak ditemukan: ${row.kode_alat}`); continue; }
     if (isNaN(row.qty) || row.qty < 0) { errors.push(`Qty tidak valid: ${row.kode_alat}`); continue; }
     toUpsert.push({ alat_id: alatId, qty_tersedia: Math.round(row.qty) });
@@ -140,18 +203,18 @@ export async function importStokProyekAction(
     supabase.from("klien").select("id, kode"),
   ]);
   const alatByKode = new Map(
-    (alatRaw ?? []).map((a: { id: string; kode: string }) => [a.kode, a.id])
+    (alatRaw ?? []).map((a: { id: string; kode: string }) => [normalizeKode(a.kode), a.id])
   );
   const klienByKode = new Map(
-    (klienRaw ?? []).map((k: { id: string; kode: string }) => [k.kode, k.id])
+    (klienRaw ?? []).map((k: { id: string; kode: string }) => [normalizeKode(k.kode), k.id])
   );
 
   const errors: string[] = [];
   const toUpsert: { klien_id: string; alat_id: string; qty: number }[] = [];
 
   for (const row of rows) {
-    const klienId = klienByKode.get(row.kode_klien?.trim().toUpperCase() ?? "");
-    const alatId = alatByKode.get(row.kode_alat?.trim().toUpperCase() ?? "");
+    const klienId = klienByKode.get(normalizeKode(row.kode_klien));
+    const alatId = alatByKode.get(normalizeKode(row.kode_alat));
     if (!klienId) { errors.push(`Klien tidak ditemukan: ${row.kode_klien}`); continue; }
     if (!alatId) { errors.push(`Alat tidak ditemukan: ${row.kode_alat}`); continue; }
     if (isNaN(row.qty) || row.qty < 0) { errors.push(`Qty tidak valid: ${row.kode_klien}/${row.kode_alat}`); continue; }
@@ -196,7 +259,7 @@ export async function importKontrakAction(
     supabase.from("kontrak_sewa").select("nomor_kontrak"),
   ]);
   const klienByKode = new Map(
-    (klienRaw ?? []).map((k: { id: string; kode: string }) => [k.kode, k.id])
+    (klienRaw ?? []).map((k: { id: string; kode: string }) => [normalizeKode(k.kode), k.id])
   );
   const existingNomor = new Set(
     (existingKontrak ?? []).map((k: { nomor_kontrak: string }) => k.nomor_kontrak)
@@ -217,7 +280,7 @@ export async function importKontrakAction(
 
   for (const row of rows) {
     const nomor = row.nomor_kontrak?.trim();
-    const kodeKlien = row.kode_klien?.trim().toUpperCase();
+    const kodeKlien = normalizeKode(row.kode_klien);
     if (!nomor || !kodeKlien) { errors.push(`Baris tidak lengkap: ${JSON.stringify(row)}`); continue; }
     if (existingNomor.has(nomor)) { skipped++; continue; }
     const klienId = klienByKode.get(kodeKlien);
@@ -270,7 +333,7 @@ export async function importHargaAction(
     (kontrakRaw ?? []).map((k: { id: string; nomor_kontrak: string }) => [k.nomor_kontrak, k.id])
   );
   const alatByKode = new Map(
-    (alatRaw ?? []).map((a: { id: string; kode: string }) => [a.kode, a.id])
+    (alatRaw ?? []).map((a: { id: string; kode: string }) => [normalizeKode(a.kode), a.id])
   );
 
   const errors: string[] = [];
@@ -278,13 +341,13 @@ export async function importHargaAction(
 
   for (const row of rows) {
     const nomor = row.nomor_kontrak?.trim();
-    const kodeAlat = row.kode_alat?.trim().toUpperCase();
+    const kodeAlat = normalizeKode(row.kode_alat);
     const harga = parseFloat(String(row.harga_bulanan).replace(/[^\d.]/g, ""));
     if (!nomor || !kodeAlat) { errors.push(`Baris tidak lengkap`); continue; }
     const kontrakId = kontrakByNomor.get(nomor);
     if (!kontrakId) { errors.push(`Kontrak tidak ditemukan: ${nomor}`); continue; }
     const alatId = alatByKode.get(kodeAlat);
-    if (!alatId) { errors.push(`Alat tidak ditemukan: ${kodeAlat}`); continue; }
+    if (!alatId) { errors.push(`Alat tidak ditemukan: ${row.kode_alat}`); continue; }
     if (isNaN(harga) || harga < 0) { errors.push(`Harga tidak valid: ${kodeAlat} / ${nomor}`); continue; }
     toUpsert.push({ kontrak_id: kontrakId, alat_id: alatId, harga_bulanan: harga, locked: false });
   }

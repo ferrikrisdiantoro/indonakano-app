@@ -62,6 +62,12 @@ export async function createTransaksiAction(data: TransaksiFormData): Promise<Ac
   if (data.tipe === "TRANSFER" && !data.klien_tujuan_id)
     return { success: false, error: "Klien tujuan wajib diisi untuk Transfer" };
 
+  const requiresNoSj = data.tipe === "PENGIRIMAN" || data.tipe === "RETUR" || data.tipe === "TRANSFER";
+  if (requiresNoSj && !data.no_sj.trim())
+    return { success: false, error: "No. Surat Jalan wajib diisi untuk tipe ini" };
+  if (data.tipe === "TRANSFER" && !data.no_sj_operan.trim())
+    return { success: false, error: "No. SJ Operan wajib diisi untuk Transfer" };
+
   const validItems = data.items.filter((i) => i.alat_id && i.qty !== 0);
   if (!validItems.length) return { success: false, error: "Minimal 1 item alat wajib diisi" };
 
@@ -129,6 +135,12 @@ export async function editTransaksiAction(
     return { success: false, error: "Klien wajib diisi" };
   if (data.tipe === "TRANSFER" && !data.klien_tujuan_id)
     return { success: false, error: "Klien tujuan wajib diisi untuk Transfer" };
+
+  const requiresNoSj = data.tipe === "PENGIRIMAN" || data.tipe === "RETUR" || data.tipe === "TRANSFER";
+  if (requiresNoSj && !data.no_sj.trim())
+    return { success: false, error: "No. Surat Jalan wajib diisi untuk tipe ini" };
+  if (data.tipe === "TRANSFER" && !data.no_sj_operan.trim())
+    return { success: false, error: "No. SJ Operan wajib diisi untuk Transfer" };
 
   const validItems = data.items.filter((i) => i.alat_id && i.qty !== 0);
   if (!validItems.length) return { success: false, error: "Minimal 1 item alat wajib diisi" };

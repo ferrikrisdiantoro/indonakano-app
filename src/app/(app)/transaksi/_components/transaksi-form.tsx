@@ -161,6 +161,16 @@ export function TransaksiFormDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (requiresNoSj && !noSj.trim()) {
+      toast.error("No. Surat Jalan wajib diisi untuk tipe ini");
+      return;
+    }
+    if (tipe === "TRANSFER" && !noSjOperan.trim()) {
+      toast.error("No. SJ Operan wajib diisi untuk Transfer");
+      return;
+    }
+
     const items = itemRows
       .filter((r) => r.alat_id && r.qty)
       .map((r) => ({ alat_id: r.alat_id, qty: parseInt(r.qty) }));
@@ -198,6 +208,7 @@ export function TransaksiFormDialog({
   const showKlienTujuan = tipe === "TRANSFER";
   const showNoSjOperan = tipe === "TRANSFER";
   const isAdjustment = tipe === "STOCK_ADJUSTMENT";
+  const requiresNoSj = tipe === "PENGIRIMAN" || tipe === "RETUR" || tipe === "TRANSFER";
 
   const selectCls =
     "w-full h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50";
@@ -302,21 +313,30 @@ export function TransaksiFormDialog({
             {/* No SJ */}
             <div className={showNoSjOperan ? "grid grid-cols-2 gap-3" : ""}>
               <div className="space-y-1.5">
-                <Label>No. Surat Jalan</Label>
+                <Label>
+                  No. Surat Jalan{" "}
+                  {requiresNoSj ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-slate-400 text-xs">(opsional)</span>
+                  )}
+                </Label>
                 <Input
                   value={noSj}
                   onChange={(e) => setNoSj(e.target.value)}
-                  placeholder="SJ-001"
+                  placeholder="Contoh: SJ-001"
                   disabled={isPending}
                 />
               </div>
               {showNoSjOperan && (
                 <div className="space-y-1.5">
-                  <Label>No. SJ Operan</Label>
+                  <Label>
+                    No. SJ Operan <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     value={noSjOperan}
                     onChange={(e) => setNoSjOperan(e.target.value)}
-                    placeholder="SJ-002"
+                    placeholder="Contoh: SJ-002"
                     disabled={isPending}
                   />
                 </div>
