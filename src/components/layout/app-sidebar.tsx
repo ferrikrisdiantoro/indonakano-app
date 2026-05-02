@@ -23,6 +23,7 @@ import {
   LogOut,
   X,
   FolderInput,
+  History,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -71,14 +72,22 @@ function buildNav(role: UserRole, pendingCount: number): NavItem[] {
       children: [
         { label: "Pengguna", href: "/pengaturan/user", icon: Users },
         { label: "Format Tagihan", href: "/pengaturan/format-tagihan", icon: FileCode2 },
+        { label: "Audit Log", href: "/pengaturan/audit-log", icon: History },
       ],
     },
   ];
 
   const checkerNav: NavItem[] = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Pending Approval", href: "/transaksi/pending", icon: Clock, badge: pendingCount },
-    { label: "Semua Transaksi", href: "/transaksi", icon: ArrowRightLeft },
+    { label: "Stok Gudang", href: "/gudang", icon: Package },
+    {
+      label: "Transaksi",
+      icon: ArrowRightLeft,
+      children: [
+        { label: "Semua Transaksi", href: "/transaksi", icon: ArrowRightLeft },
+        { label: "Pending Approval", href: "/transaksi/pending", icon: Clock, badge: pendingCount },
+      ],
+    },
     { label: "Rekap Stok", href: "/rekap", icon: BarChart3 },
     { label: "Tagihan", href: "/tagihan", icon: FileText },
   ];

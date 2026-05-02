@@ -64,13 +64,11 @@ const TIPE_OPTIONS: TipeTransaksi[] = [
 
 export function TransaksiListClient({
   transaksiList,
-  isAdmin,
   klienList,
   alatList,
   kontrakList,
 }: {
   transaksiList: TransaksiListItem[];
-  isAdmin: boolean;
   klienList: KlienOption[];
   alatList: AlatOption[];
   kontrakList: KontrakOption[];
@@ -151,11 +149,9 @@ export function TransaksiListClient({
                 </span>
               )}
             </Button>
-            {isAdmin && (
-              <Button size="sm" onClick={() => setOpenCreate(true)}>
-                <Plus className="w-4 h-4 mr-1.5" /> Buat Transaksi
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setOpenCreate(true)}>
+              <Plus className="w-4 h-4 mr-1.5" /> Buat Transaksi
+            </Button>
           </div>
         }
       />
@@ -310,15 +306,13 @@ export function TransaksiListClient({
         </Table>
       </div>
 
-      {isAdmin && (
-        <TransaksiFormDialog
-          open={openCreate}
-          onOpenChange={setOpenCreate}
-          klienList={klienList}
-          alatList={alatList}
-          kontrakList={kontrakList}
-        />
-      )}
+      <TransaksiFormDialog
+        open={openCreate}
+        onOpenChange={setOpenCreate}
+        klienList={klienList}
+        alatList={alatList}
+        kontrakList={kontrakList}
+      />
     </>
   );
 }

@@ -62,6 +62,7 @@ type TransaksiDetail = {
   status: TransaksiStatus;
   override_stok_minus: boolean;
   override_alasan: string | null;
+  created_by: string;
   approved_at: string | null;
   rejected_at: string | null;
   rejected_reason: string | null;
@@ -240,9 +241,15 @@ export function TransaksiDetailClient({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isPendingStatus = transaksi.status === "PENDING_APPROVAL";
-  const canApproveReject = isChecker && isPendingStatus;
+  const isOwnTransaksi = transaksi.created_by === currentUserId;
+  // Both Admin & Checker bisa approve/reject, kecuali transaksi yang dia buat sendiri
+  // (segregation of duties — ditegakkan juga di SQL function approve_transaksi)
+  const canApproveReject = isPendingStatus && !isOwnTransaksi;
   const canVoid = isAdmin && isPendingStatus;
-  const canEdit = isAdmin && isPendingStatus;
+  // Both roles bisa edit transaksi PENDING (biasanya hanya creator yang akan edit, tapi role tidak membatasi)
+  const canEdit = isPendingStatus;
+  // Suppress unused warning — isChecker masih dilewati dari parent untuk masa depan (misal label UI)
+  void isChecker;
 
   const editInitialData: TransaksiInitialData = {
     tipe: transaksi.tipe,

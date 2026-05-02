@@ -6,7 +6,7 @@ import { PendingClient } from "./_components/pending-client";
 export const metadata: Metadata = { title: "Menunggu Persetujuan" };
 
 export default async function PendingPage() {
-  const { role } = await requireAuth();
+  await requireAuth();
   const supabase = await createClient();
 
   const { data: pendingList } = await supabase
@@ -21,7 +21,6 @@ export default async function PendingPage() {
     <PendingClient
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pendingList={(pendingList ?? []) as any}
-      isChecker={role === "CHECKER"}
     />
   );
 }

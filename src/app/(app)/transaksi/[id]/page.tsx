@@ -20,7 +20,7 @@ export default async function TransaksiDetailPage({
   const { data: trx } = await (supabase as any)
     .from("transaksi")
     .select(
-      "*, klien:klien_id(kode, nama), klien_tujuan:klien_tujuan_id(kode, nama), kontrak:kontrak_id(nomor_kontrak), created_by_user:created_by(nama), approved_by_user:approved_by(nama), rejected_by_user:rejected_by(nama), void_by_user:void_by(nama), items:transaksi_item(id, alat_id, qty, alat:alat_id(kode, nama, satuan_default))"
+      "*, created_by, klien:klien_id(kode, nama), klien_tujuan:klien_tujuan_id(kode, nama), kontrak:kontrak_id(nomor_kontrak), created_by_user:created_by(nama), approved_by_user:approved_by(nama), rejected_by_user:rejected_by(nama), void_by_user:void_by(nama), items:transaksi_item(id, alat_id, qty, alat:alat_id(kode, nama, satuan_default))"
     )
     .eq("id", id)
     .single();

@@ -6,7 +6,7 @@ import { TransaksiListClient } from "./_components/transaksi-list-client";
 export const metadata: Metadata = { title: "Transaksi" };
 
 export default async function TransaksiPage() {
-  const { role } = await requireAuth();
+  await requireAuth();
   const supabase = await createClient();
 
   const [trxResult, klienResult, alatResult, kontrakResult] = await Promise.all([
@@ -37,7 +37,6 @@ export default async function TransaksiPage() {
     <TransaksiListClient
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       transaksiList={(trxResult.data ?? []) as any}
-      isAdmin={role === "ADMIN"}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       klienList={(klienResult.data ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

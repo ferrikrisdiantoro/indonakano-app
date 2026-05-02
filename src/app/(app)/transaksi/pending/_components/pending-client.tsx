@@ -45,10 +45,8 @@ type TransaksiPendingItem = {
 
 export function PendingClient({
   pendingList,
-  isChecker,
 }: {
   pendingList: TransaksiPendingItem[];
-  isChecker: boolean;
 }) {
   return (
     <>
@@ -61,9 +59,9 @@ export function PendingClient({
         }
       />
 
-      {isChecker && pendingList.length > 0 && (
+      {pendingList.length > 0 && (
         <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-          Klik <strong>Detail</strong> untuk melihat item transaksi sebelum menyetujui atau menolak.
+          Klik <strong>Detail</strong> untuk melihat item transaksi. Anda tidak bisa menyetujui transaksi yang Anda buat sendiri.
         </div>
       )}
 

@@ -52,7 +52,7 @@ async function validateStokProyek(
 }
 
 export async function createTransaksiAction(data: TransaksiFormData): Promise<ActionResult> {
-  const userId = await requireAdmin();
+  const { userId } = await requireAuth();
   const supabase = await createClient();
 
   if (!data.tipe) return { success: false, error: "Tipe transaksi wajib diisi" };
@@ -126,7 +126,7 @@ export async function editTransaksiAction(
   transaksiId: string,
   data: TransaksiFormData
 ): Promise<ActionResult> {
-  const userId = await requireAdmin();
+  const { userId } = await requireAuth();
   const supabase = await createClient();
 
   if (!data.tipe) return { success: false, error: "Tipe transaksi wajib diisi" };
@@ -208,8 +208,9 @@ export async function editTransaksiAction(
 }
 
 export async function approveTransaksiAction(transaksiId: string): Promise<ActionResult> {
-  const { userId, role } = await requireAuth();
-  if (role !== "CHECKER") return { success: false, error: "Hanya Checker yang bisa menyetujui" };
+  // Admin & Checker keduanya bisa approve transaksi orang lain.
+  // Self-approval di-block oleh SQL function approve_transaksi (segregation of duties).
+  const { userId } = await requireAuth();
   const supabase = await createClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,8 +241,7 @@ export async function rejectTransaksiAction(
   transaksiId: string,
   reason: string
 ): Promise<ActionResult> {
-  const { userId, role } = await requireAuth();
-  if (role !== "CHECKER") return { success: false, error: "Hanya Checker yang bisa menolak" };
+  const { userId } = await requireAuth();
   if (!reason.trim()) return { success: false, error: "Alasan penolakan wajib diisi" };
   const supabase = await createClient();
 
