@@ -100,59 +100,64 @@ export function AuditLogClient({ rows }: { rows: AuditLogRow[] }) {
         description={`${rows.length} riwayat aksi terbaru (maks 500). Filter untuk lihat aksi tertentu.`}
       />
 
-      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 flex flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">Entitas</label>
-          <select
-            value={filterEntity}
-            onChange={(e) => setFilterEntity(e.target.value)}
-            className={selectCls}
-          >
-            <option value="">Semua</option>
-            {entityOptions.map((e) => (
-              <option key={e} value={e}>
-                {ENTITY_LABEL[e] ?? e}
-              </option>
-            ))}
-          </select>
+      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 space-y-3">
+        <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Tipe Data Diubah</label>
+            <select
+              value={filterEntity}
+              onChange={(e) => setFilterEntity(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">— Semua Tipe —</option>
+              {entityOptions.map((e) => (
+                <option key={e} value={e}>
+                  {ENTITY_LABEL[e] ?? e}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-500">Aksi</label>
+            <select
+              value={filterAction}
+              onChange={(e) => setFilterAction(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">— Semua Aksi —</option>
+              {actionOptions.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1 flex-1 min-w-40">
+            <label className="text-xs font-medium text-slate-500">Pelaku (Nama User)</label>
+            <input
+              type="text"
+              value={filterUser}
+              onChange={(e) => setFilterUser(e.target.value)}
+              placeholder="Mis. Adnub, ketik sebagian nama…"
+              className={selectCls}
+            />
+          </div>
+          {(filterEntity || filterAction || filterUser) && (
+            <button
+              onClick={() => {
+                setFilterEntity("");
+                setFilterAction("");
+                setFilterUser("");
+              }}
+              className="self-end h-9 px-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md"
+            >
+              Reset
+            </button>
+          )}
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">Aksi</label>
-          <select
-            value={filterAction}
-            onChange={(e) => setFilterAction(e.target.value)}
-            className={selectCls}
-          >
-            <option value="">Semua</option>
-            {actionOptions.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1 flex-1 min-w-40">
-          <label className="text-xs font-medium text-slate-500">Cari Nama User</label>
-          <input
-            type="text"
-            value={filterUser}
-            onChange={(e) => setFilterUser(e.target.value)}
-            placeholder="Ketik nama…"
-            className={selectCls}
-          />
-        </div>
-        {(filterEntity || filterAction || filterUser) && (
-          <button
-            onClick={() => {
-              setFilterEntity("");
-              setFilterAction("");
-              setFilterUser("");
-            }}
-            className="self-end h-9 px-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md"
-          >
-            Reset
-          </button>
-        )}
+        <p className="text-xs text-slate-400">
+          Tip: <span className="text-slate-600">Tipe Data</span> = data apa yang berubah (transaksi, klien, dll). <span className="text-slate-600">Pelaku</span> = siapa yang melakukan aksi. Kosongkan filter untuk lihat semuanya.
+        </p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

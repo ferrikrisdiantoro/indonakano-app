@@ -256,11 +256,22 @@ export async function generateTagihanAction(
     }
   }
 
-  if (!items.length)
-    return {
-      success: false,
-      error: "Tidak ada alat yang perlu ditagih untuk klien ini pada periode tersebut",
-    };
+  if (!items.length) {
+    // Diagnostic: bantu admin tahu kenapa kosong
+    const totalStokProyek = Array.from(stokMap.values()).reduce((a, b) => a + b, 0);
+    const totalTrxInPeriod = txnInPeriod.length;
+
+    let detail = "";
+    if (totalTrxInPeriod === 0 && totalStokProyek === 0) {
+      detail = "Klien belum punya transaksi APPROVED dan stok proyek = 0. Buat & approve PENGIRIMAN dulu sebelum generate tagihan.";
+    } else if (totalTrxInPeriod === 0) {
+      detail = `Tidak ada transaksi APPROVED di periode ${data.periode_mulai} – ${data.periode_akhir} (stok proyek saat ini ${totalStokProyek} unit, tapi semua pergerakan terjadi di luar periode). Coba ubah periode atau cek tanggal transaksi.`;
+    } else {
+      detail = `Ada ${totalTrxInPeriod} transaksi di periode ini, tapi tidak ada alat dari kontrak yang dipilih yang cocok. Cek apakah harga sewa untuk alat-alat tsb sudah terdaftar di kontrak.`;
+    }
+
+    return { success: false, error: `Tidak ada alat yang bisa ditagih: ${detail}` };
+  }
 
   const subtotal = items.reduce((sum, i) => sum + i.total, 0);
   const ppnAmount = roundHalfUp((subtotal * ppnPersen) / 100, 0);
@@ -368,13 +379,8 @@ export async function voidTagihanAction(
   const result = data as { success: boolean; error?: string };
   if (!result.success) return { success: false, error: result.error ?? "Gagal void tagihan" };
 
-  await writeAudit(supabase, {
-    userId,
-    entityType: "tagihan",
-    entityId: tagihanId,
-    action: "VOID",
-    afterValue: { reason },
-  });
+  // Audit log sudah ditulis atomik di dalam SQL function void_tagihan
+  // (action='VOID', after_value berisi status + reason).
 
   revalidatePath("/tagihan");
   revalidatePath(`/tagihan/${tagihanId}`);

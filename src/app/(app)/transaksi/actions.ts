@@ -239,12 +239,8 @@ export async function approveTransaksiAction(transaksiId: string): Promise<Actio
   const result = data as { success: boolean; error?: string };
   if (!result.success) return { success: false, error: result.error ?? "Gagal menyetujui" };
 
-  await writeAudit(supabase, {
-    userId,
-    entityType: "transaksi",
-    entityId: transaksiId,
-    action: "APPROVE",
-  });
+  // Audit log sudah ditulis atomik di dalam SQL function approve_transaksi
+  // (action='APPROVED', after_value lengkap dengan override_alasan).
 
   revalidatePath("/transaksi");
   revalidatePath("/transaksi/pending");
@@ -272,13 +268,8 @@ export async function rejectTransaksiAction(
   const result = data as { success: boolean; error?: string };
   if (!result.success) return { success: false, error: result.error ?? "Gagal menolak" };
 
-  await writeAudit(supabase, {
-    userId,
-    entityType: "transaksi",
-    entityId: transaksiId,
-    action: "REJECT",
-    afterValue: { reason },
-  });
+  // Audit log sudah ditulis atomik di dalam SQL function reject_transaksi
+  // (action='REJECTED', after_value berisi status + reason).
 
   revalidatePath("/transaksi");
   revalidatePath("/transaksi/pending");
