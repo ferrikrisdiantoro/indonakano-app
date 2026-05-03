@@ -27,7 +27,13 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body className={`${jakartaSans.variable} antialiased`}>
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          duration={6000}
+          toastOptions={{ style: { fontSize: "14px" } }}
+        />
       </body>
     </html>
   );

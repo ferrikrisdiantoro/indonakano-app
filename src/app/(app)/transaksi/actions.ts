@@ -114,7 +114,15 @@ export async function createTransaksiAction(data: TransaksiFormData): Promise<Ac
     entityType: "transaksi",
     entityId: inserted.id,
     action: "CREATE",
-    afterValue: { tipe: data.tipe, tanggal: data.tanggal, klien_id: data.klien_id, override_stok_minus: data.override_stok_minus },
+    afterValue: {
+      tipe: data.tipe,
+      tanggal: data.tanggal,
+      klien_id: data.klien_id,
+      override_stok_minus: data.override_stok_minus,
+      ...(data.override_stok_minus && data.override_alasan.trim()
+        ? { override_alasan: data.override_alasan.trim() }
+        : {}),
+    },
   });
 
   revalidatePath("/transaksi");
@@ -198,7 +206,15 @@ export async function editTransaksiAction(
     entityType: "transaksi",
     entityId: transaksiId,
     action: "EDIT",
-    afterValue: { tipe: data.tipe, tanggal: data.tanggal, klien_id: data.klien_id },
+    afterValue: {
+      tipe: data.tipe,
+      tanggal: data.tanggal,
+      klien_id: data.klien_id,
+      override_stok_minus: data.override_stok_minus,
+      ...(data.override_stok_minus && data.override_alasan.trim()
+        ? { override_alasan: data.override_alasan.trim() }
+        : {}),
+    },
   });
 
   revalidatePath("/transaksi");

@@ -431,9 +431,19 @@ export function TransaksiFormDialog({
                   </TableBody>
                 </Table>
               </div>
-              {isAdjustment && (
-                <p className="text-xs text-slate-400">
-                  Gunakan angka positif untuk penambahan stok, negatif untuk pengurangan.
+              {isAdjustment ? (
+                <p className="text-xs text-slate-500">
+                  Isi qty <span className="font-semibold text-emerald-600">positif (mis. 10)</span> untuk
+                  menambah stok gudang, atau <span className="font-semibold text-red-600">negatif (mis. -3)</span> untuk
+                  mengurangi.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Selalu isi qty positif. Arah pergerakan stok mengikuti tipe transaksi:{" "}
+                  {tipe === "PENGIRIMAN" && <><span className="font-semibold text-red-600">keluar gudang → masuk proyek</span>.</>}
+                  {tipe === "RETUR" && <><span className="font-semibold text-emerald-600">masuk gudang ← keluar proyek</span>.</>}
+                  {tipe === "TRANSFER" && <><span className="font-semibold text-blue-600">pindah dari proyek asal → proyek tujuan</span>.</>}
+                  {tipe === "CLAIM" && <><span className="font-semibold text-amber-600">stok proyek berkurang (alat hilang/rusak)</span>.</>}
                 </p>
               )}
             </div>

@@ -49,6 +49,15 @@ const TIPE_LABEL: Record<TipeTransaksi, string> = {
   STOCK_ADJUSTMENT: "Penyesuaian Stok",
 };
 
+// Arah pergerakan stok per tipe transaksi (untuk label di tabel item)
+const ARAH_STOK: Record<TipeTransaksi, { label: string; color: string }> = {
+  PENGIRIMAN:       { label: "Keluar Gudang",  color: "text-red-600" },
+  RETUR:            { label: "Masuk Gudang",   color: "text-emerald-600" },
+  TRANSFER:         { label: "Pindah Proyek",  color: "text-blue-600" },
+  CLAIM:            { label: "Claim Proyek",   color: "text-amber-600" },
+  STOCK_ADJUSTMENT: { label: "Penyesuaian",    color: "text-slate-600" },
+};
+
 type TransaksiDetail = {
   id: string;
   tipe: TipeTransaksi;
@@ -504,9 +513,14 @@ export function TransaksiDetailClient({
 
       {/* Items */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 mb-3">
-          Daftar Alat ({transaksi.items.length} item)
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Daftar Alat ({transaksi.items.length} item)
+          </h2>
+          <span className={`text-xs font-medium ${ARAH_STOK[transaksi.tipe].color}`}>
+            {ARAH_STOK[transaksi.tipe].label}
+          </span>
+        </div>
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <Table>
             <TableHeader>
@@ -525,20 +539,30 @@ export function TransaksiDetailClient({
                   </TableCell>
                 </TableRow>
               ) : (
-                transaksi.items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-mono text-sm">
-                      {item.alat?.kode ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm">{item.alat?.nama ?? "—"}</TableCell>
-                    <TableCell className="text-right text-sm font-semibold">
-                      {item.qty > 0 ? `+${item.qty}` : item.qty}
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500">
-                      {item.alat?.satuan_default ?? "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
+                transaksi.items.map((item) => {
+                  // Tampilkan +/- hanya untuk STOCK_ADJUSTMENT (tanda penting di sana)
+                  // Tipe lain: arah implisit dari label "Keluar/Masuk Gudang" di header
+                  const qtyDisplay =
+                    transaksi.tipe === "STOCK_ADJUSTMENT"
+                      ? (item.qty > 0 ? `+${item.qty}` : `${item.qty}`)
+                      : `${Math.abs(item.qty)}`;
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-mono text-sm">
+                        {item.alat?.kode ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">{item.alat?.nama ?? "—"}</TableCell>
+                      <TableCell
+                        className={`text-right text-sm font-semibold ${ARAH_STOK[transaksi.tipe].color}`}
+                      >
+                        {qtyDisplay}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-500">
+                        {item.alat?.satuan_default ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
