@@ -32,7 +32,6 @@ export default function RootLayout({
           richColors
           closeButton
           duration={6000}
-          toastOptions={{ style: { fontSize: "14px" } }}
         />
       </body>
     </html>

@@ -178,17 +178,27 @@ export default async function GudangPage({
                     {s.alat?.satuan_default ?? "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span
-                      className={`text-sm font-semibold ${
-                        s.qty_tersedia < 0
-                          ? "text-red-600"
-                          : s.qty_tersedia === 0
-                          ? "text-slate-400"
-                          : "text-slate-900"
-                      }`}
-                    >
-                      {s.qty_tersedia.toLocaleString("id-ID")}
-                    </span>
+                    <div className="flex items-center justify-end gap-2">
+                      {s.qty_tersedia < 0 && (
+                        <span
+                          className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 bg-red-100 text-red-700 rounded"
+                          title="Stok minus karena pernah ada PENGIRIMAN dengan Override Stok Minus dicentang"
+                        >
+                          Minus
+                        </span>
+                      )}
+                      <span
+                        className={`text-sm font-semibold ${
+                          s.qty_tersedia < 0
+                            ? "text-red-600"
+                            : s.qty_tersedia === 0
+                            ? "text-slate-400"
+                            : "text-slate-900"
+                        }`}
+                      >
+                        {s.qty_tersedia.toLocaleString("id-ID")}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-slate-400">
                     {formatDateShort(s.updated_at)}
