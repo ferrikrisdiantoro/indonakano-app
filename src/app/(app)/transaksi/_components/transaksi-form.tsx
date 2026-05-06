@@ -59,6 +59,7 @@ export function TransaksiFormDialog({
   klienList,
   alatList,
   kontrakList,
+  stokGudangMap,
   editId,
   initialData,
 }: {
@@ -67,6 +68,7 @@ export function TransaksiFormDialog({
   klienList: KlienOption[];
   alatList: AlatOption[];
   kontrakList: KontrakOption[];
+  stokGudangMap?: Record<string, number>;
   editId?: string;
   initialData?: TransaksiInitialData;
 }) {
@@ -209,6 +211,30 @@ export function TransaksiFormDialog({
   const showNoSjOperan = tipe === "TRANSFER";
   const isAdjustment = tipe === "STOCK_ADJUSTMENT";
   const requiresNoSj = tipe === "PENGIRIMAN" || tipe === "RETUR" || tipe === "TRANSFER";
+
+  // Peringatan stok gudang insufficient untuk PENGIRIMAN.
+  // Tidak blokir submit — hanya warn, karena user bisa pilih centang Override
+  // Stok Minus, atau biarkan PENDING dan baru centang override saat edit.
+  const stokWarnings: string[] = [];
+  if (tipe === "PENGIRIMAN" && stokGudangMap && !overrideStokMinus) {
+    // Aggregate qty per alat (form bisa punya banyak baris untuk alat sama)
+    const qtyByAlat = new Map<string, number>();
+    for (const r of itemRows) {
+      if (!r.alat_id || !r.qty) continue;
+      const q = parseInt(r.qty);
+      if (isNaN(q) || q <= 0) continue;
+      qtyByAlat.set(r.alat_id, (qtyByAlat.get(r.alat_id) ?? 0) + q);
+    }
+    for (const [alatId, totalQty] of qtyByAlat.entries()) {
+      const stok = stokGudangMap[alatId] ?? 0;
+      if (totalQty > stok) {
+        const alat = alatList.find((a) => a.id === alatId);
+        stokWarnings.push(
+          `${alat?.kode ?? alatId}: stok gudang ${stok}, qty kamu ${totalQty}`
+        );
+      }
+    }
+  }
 
   const selectCls =
     "w-full h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50";
@@ -447,6 +473,23 @@ export function TransaksiFormDialog({
                 </p>
               )}
             </div>
+
+            {/* Peringatan stok gudang insufficient */}
+            {stokWarnings.length > 0 && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-1.5">
+                <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+                  ⚠ Stok gudang tidak cukup untuk {stokWarnings.length === 1 ? "alat ini" : `${stokWarnings.length} alat`}
+                </p>
+                <ul className="text-xs text-amber-700 space-y-0.5 ml-1">
+                  {stokWarnings.map((w, i) => (
+                    <li key={i}>• {w}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-amber-700 mt-2">
+                  Approve transaksi ini akan <strong>ditolak</strong> kecuali kamu centang <em>Override Stok Minus</em> di bawah.
+                </p>
+              </div>
+            )}
 
             {/* Override */}
             <div className="space-y-2">

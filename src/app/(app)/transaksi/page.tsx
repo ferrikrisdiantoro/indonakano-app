@@ -9,7 +9,7 @@ export default async function TransaksiPage() {
   await requireAuth();
   const supabase = await createClient();
 
-  const [trxResult, klienResult, alatResult, kontrakResult] = await Promise.all([
+  const [trxResult, klienResult, alatResult, kontrakResult, stokResult] = await Promise.all([
     supabase
       .from("transaksi")
       .select(
@@ -31,7 +31,13 @@ export default async function TransaksiPage() {
       .from("kontrak_sewa")
       .select("id, klien_id, nomor_kontrak")
       .eq("status", "AKTIF"),
+    supabase.from("stok_gudang").select("alat_id, qty_tersedia"),
   ]);
+
+  const stokGudangMap: Record<string, number> = {};
+  for (const s of (stokResult.data ?? []) as { alat_id: string; qty_tersedia: number }[]) {
+    stokGudangMap[s.alat_id] = s.qty_tersedia;
+  }
 
   return (
     <TransaksiListClient
@@ -43,6 +49,7 @@ export default async function TransaksiPage() {
       alatList={(alatResult.data ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       kontrakList={(kontrakResult.data ?? []) as any}
+      stokGudangMap={stokGudangMap}
     />
   );
 }

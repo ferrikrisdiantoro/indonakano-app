@@ -94,11 +94,24 @@ export async function resetPasswordAction(
   if (error) return { success: false, error: error.message };
 
   const supabase = await createClient();
+
+  // Ambil nama user untuk konteks audit (jangan log password!)
+  const { data: target } = await supabase
+    .from("users")
+    .select("nama, email")
+    .eq("id", targetUserId)
+    .single();
+
   await writeAudit(supabase, {
     userId,
     entityType: "users",
     entityId: targetUserId,
     action: "RESET_PASSWORD",
+    afterValue: {
+      target_nama: target?.nama ?? null,
+      target_email: target?.email ?? null,
+      // password TIDAK disimpan ke audit log untuk alasan keamanan
+    },
   });
 
   return { success: true };
@@ -131,11 +144,24 @@ export async function toggleUserActiveAction(
   if (error) return { success: false, error: error.message };
 
   const supabase = await createClient();
+
+  const { data: target } = await supabase
+    .from("users")
+    .select("nama, email, role")
+    .eq("id", targetUserId)
+    .single();
+
   await writeAudit(supabase, {
     userId,
     entityType: "users",
     entityId: targetUserId,
     action: isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+    afterValue: {
+      is_active: isActive,
+      target_nama: target?.nama ?? null,
+      target_email: target?.email ?? null,
+      target_role: target?.role ?? null,
+    },
   });
 
   revalidatePath("/pengaturan/user");

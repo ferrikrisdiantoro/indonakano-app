@@ -100,6 +100,7 @@ export async function toggleAlatActiveAction(
     entityType: "alat",
     entityId: id,
     action: is_active ? "ACTIVATE" : "DEACTIVATE",
+    afterValue: { is_active },
   });
 
   revalidatePath("/master/alat");

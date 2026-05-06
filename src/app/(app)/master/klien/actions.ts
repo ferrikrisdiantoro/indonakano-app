@@ -106,6 +106,7 @@ export async function toggleKlienActiveAction(
     entityType: "klien",
     entityId: id,
     action: is_active ? "ACTIVATE" : "DEACTIVATE",
+    afterValue: { is_active },
   });
 
   revalidatePath("/master/klien");

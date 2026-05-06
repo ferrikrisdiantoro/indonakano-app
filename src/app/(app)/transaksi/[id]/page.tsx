@@ -27,7 +27,7 @@ export default async function TransaksiDetailPage({
 
   if (!trx) notFound();
 
-  const [klienResult, alatResult, kontrakResult, attachmentResult] = await Promise.all([
+  const [klienResult, alatResult, kontrakResult, attachmentResult, stokResult] = await Promise.all([
     supabase.from("klien").select("id, kode, nama").eq("is_active", true).order("kode"),
     supabase
       .from("alat")
@@ -43,7 +43,13 @@ export default async function TransaksiDetailPage({
       .select("id, file_url, file_name, file_size, uploaded_at")
       .eq("transaksi_id", id)
       .order("uploaded_at"),
+    supabase.from("stok_gudang").select("alat_id, qty_tersedia"),
   ]);
+
+  const stokGudangMap: Record<string, number> = {};
+  for (const s of (stokResult.data ?? []) as { alat_id: string; qty_tersedia: number }[]) {
+    stokGudangMap[s.alat_id] = s.qty_tersedia;
+  }
 
   return (
     <TransaksiDetailClient
@@ -60,6 +66,7 @@ export default async function TransaksiDetailPage({
       kontrakList={(kontrakResult.data ?? []) as any}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       attachments={(attachmentResult.data ?? []) as any}
+      stokGudangMap={stokGudangMap}
     />
   );
 }

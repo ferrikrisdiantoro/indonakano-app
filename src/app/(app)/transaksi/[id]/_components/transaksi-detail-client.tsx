@@ -230,6 +230,7 @@ export function TransaksiDetailClient({
   alatList,
   kontrakList,
   attachments: initialAttachments,
+  stokGudangMap,
 }: {
   transaksi: TransaksiDetail;
   currentUserId: string;
@@ -239,6 +240,7 @@ export function TransaksiDetailClient({
   alatList: AlatOption[];
   kontrakList: KontrakOption[];
   attachments: AttachmentRow[];
+  stokGudangMap: Record<string, number>;
 }) {
   const [isPending, startTransition] = useTransition();
   const [openApprove, setOpenApprove] = useState(false);
@@ -277,33 +279,31 @@ export function TransaksiDetailClient({
   function handleApprove() {
     startTransition(async () => {
       const result = await approveTransaksiAction(transaksi.id);
+      // Tutup dialog baik sukses maupun gagal — pesan sudah tampil via toast.
+      // Kalau approve gagal (mis. stok kurang), user perlu Edit transaksi
+      // dulu sebelum coba Setujui lagi, jadi dialog ditutup biar tidak
+      // kelihatan seperti masih bisa retry langsung.
+      setOpenApprove(false);
       if (!result.success) toast.error(result.error);
-      else {
-        toast.success("Transaksi berhasil disetujui");
-        setOpenApprove(false);
-      }
+      else toast.success("Transaksi berhasil disetujui");
     });
   }
 
   function handleReject(reason: string) {
     startTransition(async () => {
       const result = await rejectTransaksiAction(transaksi.id, reason);
+      setOpenReject(false);
       if (!result.success) toast.error(result.error);
-      else {
-        toast.success("Transaksi ditolak");
-        setOpenReject(false);
-      }
+      else toast.success("Transaksi ditolak");
     });
   }
 
   function handleVoid(reason: string) {
     startTransition(async () => {
       const result = await voidTransaksiAction(transaksi.id, reason);
+      setOpenVoid(false);
       if (!result.success) toast.error(result.error);
-      else {
-        toast.success("Transaksi di-void");
-        setOpenVoid(false);
-      }
+      else toast.success("Transaksi di-void");
     });
   }
 
@@ -660,6 +660,7 @@ export function TransaksiDetailClient({
         klienList={klienList}
         alatList={alatList}
         kontrakList={kontrakList}
+        stokGudangMap={stokGudangMap}
         editId={transaksi.id}
         initialData={editInitialData}
       />

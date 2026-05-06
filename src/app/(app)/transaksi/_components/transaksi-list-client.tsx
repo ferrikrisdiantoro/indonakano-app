@@ -67,11 +67,13 @@ export function TransaksiListClient({
   klienList,
   alatList,
   kontrakList,
+  stokGudangMap,
 }: {
   transaksiList: TransaksiListItem[];
   klienList: KlienOption[];
   alatList: AlatOption[];
   kontrakList: KontrakOption[];
+  stokGudangMap: Record<string, number>;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("SEMUA");
@@ -312,6 +314,7 @@ export function TransaksiListClient({
         klienList={klienList}
         alatList={alatList}
         kontrakList={kontrakList}
+        stokGudangMap={stokGudangMap}
       />
     </>
   );

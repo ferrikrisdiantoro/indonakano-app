@@ -335,11 +335,19 @@ export async function finalizeTagihanAction(tagihanId: string): Promise<ActionRe
   const userId = await requireAdmin();
   const supabase = await createClient();
 
+  // Ambil snapshot data tagihan dulu agar bisa dimasukkan ke audit log
+  const { data: snapshot } = await supabase
+    .from("tagihan")
+    .select("nomor, klien_id, total, periode_mulai, periode_akhir")
+    .eq("id", tagihanId)
+    .single();
+
+  const finalizedAt = new Date().toISOString();
   const { error } = await supabase
     .from("tagihan")
     .update({
       status: "FINAL",
-      finalized_at: new Date().toISOString(),
+      finalized_at: finalizedAt,
     })
     .eq("id", tagihanId)
     .eq("status", "DRAFT");
@@ -351,6 +359,14 @@ export async function finalizeTagihanAction(tagihanId: string): Promise<ActionRe
     entityType: "tagihan",
     entityId: tagihanId,
     action: "FINALIZE",
+    afterValue: {
+      status: "FINAL",
+      finalized_at: finalizedAt,
+      nomor: snapshot?.nomor ?? null,
+      klien_id: snapshot?.klien_id ?? null,
+      total: snapshot?.total ?? null,
+      periode: snapshot ? `${snapshot.periode_mulai} – ${snapshot.periode_akhir}` : null,
+    },
   });
 
   revalidatePath("/tagihan");
