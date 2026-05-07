@@ -170,6 +170,20 @@ export async function duplicateKontrakAction(sourceId: string): Promise<ActionRe
     );
   }
 
+  await writeAudit(supabase, {
+    userId,
+    entityType: "kontrak_sewa",
+    entityId: newKontrak.id,
+    action: "DUPLICATE",
+    afterValue: {
+      source_id: sourceId,
+      source_nomor: sourceTyped.nomor_kontrak,
+      new_nomor: `${sourceTyped.nomor_kontrak}-COPY`,
+      klien_id: sourceTyped.klien_id,
+      copied_harga_count: sourceTyped.harga_sewa.length,
+    },
+  });
+
   revalidatePath("/master/kontrak");
   redirect(`/master/kontrak/${newKontrak.id}`);
 }
