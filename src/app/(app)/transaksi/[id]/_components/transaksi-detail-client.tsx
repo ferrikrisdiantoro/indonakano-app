@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft, CheckCircle, XCircle, Slash, Pencil, Paperclip, Trash2, ExternalLink, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -242,6 +243,7 @@ export function TransaksiDetailClient({
   attachments: AttachmentRow[];
   stokGudangMap: Record<string, number>;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [openApprove, setOpenApprove] = useState(false);
   const [openReject, setOpenReject] = useState(false);
@@ -285,7 +287,10 @@ export function TransaksiDetailClient({
       // kelihatan seperti masih bisa retry langsung.
       setOpenApprove(false);
       if (!result.success) toast.error(result.error);
-      else toast.success("Transaksi berhasil disetujui");
+      else {
+        toast.success("Transaksi berhasil disetujui");
+        router.refresh();
+      }
     });
   }
 
@@ -294,7 +299,10 @@ export function TransaksiDetailClient({
       const result = await rejectTransaksiAction(transaksi.id, reason);
       setOpenReject(false);
       if (!result.success) toast.error(result.error);
-      else toast.success("Transaksi ditolak");
+      else {
+        toast.success("Transaksi ditolak");
+        router.refresh();
+      }
     });
   }
 
@@ -303,7 +311,10 @@ export function TransaksiDetailClient({
       const result = await voidTransaksiAction(transaksi.id, reason);
       setOpenVoid(false);
       if (!result.success) toast.error(result.error);
-      else toast.success("Transaksi di-void");
+      else {
+        toast.success("Transaksi di-void");
+        router.refresh();
+      }
     });
   }
 

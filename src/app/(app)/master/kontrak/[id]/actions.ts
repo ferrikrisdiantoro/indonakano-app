@@ -68,8 +68,22 @@ export async function deleteHargaSewaAction(
     return { success: false, error: "Harga sudah dikunci, tidak bisa dihapus" };
   }
 
-  const { error } = await supabase.from("harga_sewa").delete().eq("id", hargaId);
+  // .select() di akhir delete — Supabase return rows yang BERHASIL dihapus.
+  // Kalau RLS silent reject, data array kosong walaupun error null.
+  // Tanpa cek ini, action mengira sukses padahal DB tidak berubah.
+  const { data: deleted, error } = await supabase
+    .from("harga_sewa")
+    .delete()
+    .eq("id", hargaId)
+    .select();
+
   if (error) return { success: false, error: error.message };
+  if (!deleted || deleted.length === 0) {
+    return {
+      success: false,
+      error: "Gagal menghapus: tidak ada baris yang terhapus. Pastikan migration 00005 sudah dijalankan (DELETE RLS policy untuk harga_sewa).",
+    };
+  }
 
   await writeAudit(supabase, {
     userId,

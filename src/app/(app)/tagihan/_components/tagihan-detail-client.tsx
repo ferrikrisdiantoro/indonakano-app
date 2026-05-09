@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft, CheckSquare, Slash, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -127,6 +128,7 @@ export function TagihanDetailClient({
   items: TagihanItem[];
   isAdmin: boolean;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [openFinalize, setOpenFinalize] = useState(false);
   const [openVoid, setOpenVoid] = useState(false);
@@ -143,6 +145,7 @@ export function TagihanDetailClient({
       else {
         toast.success("Tagihan berhasil difinalisasi");
         setOpenFinalize(false);
+        router.refresh();
       }
     });
   }
@@ -154,6 +157,7 @@ export function TagihanDetailClient({
       else {
         toast.success("Tagihan di-void");
         setOpenVoid(false);
+        router.refresh();
       }
     });
   }

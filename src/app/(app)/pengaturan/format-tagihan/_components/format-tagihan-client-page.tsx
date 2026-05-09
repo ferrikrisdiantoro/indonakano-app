@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
@@ -18,6 +19,7 @@ export function FormatTagihanClientPage({
   prefix: string;
   nextSeq: number;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [invoicePrefix, setInvoicePrefix] = useState(prefix);
   const [invoiceNextSeq, setInvoiceNextSeq] = useState(String(nextSeq));
@@ -34,7 +36,10 @@ export function FormatTagihanClientPage({
         next_seq: seqNum,
       });
       if (!result.success) toast.error(result.error);
-      else toast.success("Format tagihan disimpan");
+      else {
+        toast.success("Format tagihan disimpan");
+        router.refresh();
+      }
     });
   }
 

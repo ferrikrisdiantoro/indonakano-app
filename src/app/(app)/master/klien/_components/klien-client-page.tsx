@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Pencil, Power, Search } from "lucide-react";
 import type { KlienRow } from "@/types/database";
@@ -42,6 +43,7 @@ function KlienFormDialog({
   onOpenChange: (v: boolean) => void;
   editing: KlienRow | null;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [kode, setKode] = useState(editing?.kode ?? "");
   const [nama, setNama] = useState(editing?.nama ?? "");
@@ -73,6 +75,7 @@ function KlienFormDialog({
       else {
         toast.success(editing ? "Klien berhasil diperbarui" : "Klien berhasil ditambahkan");
         handleOpenChange(false);
+        router.refresh();
       }
     });
   }
@@ -152,6 +155,7 @@ function KlienFormDialog({
 }
 
 export function KlienClientPage({ data }: { data: KlienRow[] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<KlienRow | null>(null);
@@ -178,8 +182,10 @@ export function KlienClientPage({ data }: { data: KlienRow[] }) {
         !confirmToggle.is_active
       );
       if (!result.success) toast.error(result.error);
-      else
+      else {
         toast.success(confirmToggle.is_active ? "Klien dinonaktifkan" : "Klien diaktifkan");
+        router.refresh();
+      }
       setConfirmToggle(null);
     });
   }

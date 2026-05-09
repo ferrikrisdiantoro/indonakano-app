@@ -64,6 +64,7 @@ function HargaFormDialog({
   existingAlatIds: Set<string>;
   editing: HargaRow | null;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [alatId, setAlatId] = useState(editing?.alat_id ?? "");
   const [harga, setHarga] = useState(editing ? String(editing.harga_bulanan) : "");
@@ -92,6 +93,7 @@ function HargaFormDialog({
       else {
         toast.success("Harga berhasil disimpan");
         onOpenChange(false);
+        router.refresh();
       }
     });
   }
@@ -171,6 +173,7 @@ function EditKontrakDialog({
   onOpenChange: (v: boolean) => void;
   kontrak: KontrakDetail;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [nomor, setNomor] = useState(kontrak.nomor_kontrak);
   const [mulai, setMulai] = useState(kontrak.tanggal_mulai);
@@ -196,6 +199,7 @@ function EditKontrakDialog({
       else {
         toast.success("Kontrak berhasil diperbarui");
         onOpenChange(false);
+        router.refresh();
       }
     });
   }
@@ -338,6 +342,7 @@ export function KontrakDetailClient({
   hargaList: HargaRow[];
   alatList: Pick<AlatRow, "id" | "kode" | "nama">[];
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [openAdd, setOpenAdd] = useState(false);
   const [editingHarga, setEditingHarga] = useState<HargaRow | null>(null);
@@ -358,7 +363,10 @@ export function KontrakDetailClient({
     startTransition(async () => {
       const result = await deleteHargaSewaAction(kontrak.id, deleteTarget.id);
       if (!result.success) toast.error(result.error);
-      else toast.success("Harga dihapus");
+      else {
+        toast.success("Harga dihapus");
+        router.refresh();
+      }
       setDeleteTarget(null);
     });
   }

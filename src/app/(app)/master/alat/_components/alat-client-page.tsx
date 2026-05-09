@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Pencil, Power, Search } from "lucide-react";
 import type { AlatRow } from "@/types/database";
@@ -44,6 +45,7 @@ function AlatFormDialog({
   onOpenChange: (v: boolean) => void;
   editing: AlatRow | null;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [kode, setKode] = useState(editing?.kode ?? "");
   const [nama, setNama] = useState(editing?.nama ?? "");
@@ -79,6 +81,7 @@ function AlatFormDialog({
       } else {
         toast.success(editing ? "Alat berhasil diperbarui" : "Alat berhasil ditambahkan");
         handleOpenChange(false);
+        router.refresh();
       }
     });
   }
@@ -144,6 +147,7 @@ function AlatFormDialog({
 // ── Main Component ────────────────────────────────────────────
 
 export function AlatClientPage({ data }: { data: AlatRow[] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AlatRow | null>(null);
@@ -180,10 +184,12 @@ export function AlatClientPage({ data }: { data: AlatRow[] }) {
         !confirmToggle.is_active
       );
       if (!result.success) toast.error(result.error);
-      else
+      else {
         toast.success(
           confirmToggle.is_active ? "Alat dinonaktifkan" : "Alat diaktifkan"
         );
+        router.refresh();
+      }
       setConfirmToggle(null);
     });
   }

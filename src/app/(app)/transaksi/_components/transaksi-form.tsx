@@ -201,7 +201,13 @@ export function TransaksiFormDialog({
       } else {
         toast.success(editId ? "Transaksi berhasil diperbarui" : "Transaksi dibuat, menunggu persetujuan");
         onOpenChange(false);
-        if (!editId && result.id) router.push(`/transaksi/${result.id}`);
+        if (!editId && result.id) {
+          // Create: navigate ke detail page (router.push juga trigger fresh fetch)
+          router.push(`/transaksi/${result.id}`);
+        } else {
+          // Edit: tetap di halaman yang sama, refresh server component agar data terbaru muncul
+          router.refresh();
+        }
       }
     });
   }

@@ -313,7 +313,19 @@ export async function generateTagihanAction(
     .insert(items.map((i) => ({ ...i, tagihan_id: tagihan.id })));
 
   if (itemsErr) {
-    await supabase.from("tagihan").delete().eq("id", tagihan.id);
+    // Rollback: hapus header tagihan yang sudah ter-insert.
+    // Sama seperti rollback transaksi: cek hasilnya supaya tidak silent fail.
+    const { data: rolledBack } = await supabase
+      .from("tagihan")
+      .delete()
+      .eq("id", tagihan.id)
+      .select();
+    if (!rolledBack || rolledBack.length === 0) {
+      console.warn(
+        `[generateTagihanAction] Rollback failed: tagihan ${tagihan.id} tetap di DB. ` +
+        `Pastikan migration 00005 (DELETE RLS policy) sudah dijalankan.`
+      );
+    }
     return { success: false, error: itemsErr.message };
   }
 

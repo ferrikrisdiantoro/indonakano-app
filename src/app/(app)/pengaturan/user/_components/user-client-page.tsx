@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Pencil, Key, UserCheck, UserX } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
@@ -48,6 +49,7 @@ function CreateUserDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,6 +65,7 @@ function CreateUserDialog({
         toast.success("Pengguna berhasil dibuat");
         onOpenChange(false);
         setEmail(""); setPassword(""); setNama(""); setRole("CHECKER");
+        router.refresh();
       }
     });
   }
@@ -127,6 +130,7 @@ function EditUserDialog({
   onOpenChange: (v: boolean) => void;
   user: UserRow;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [nama, setNama] = useState(user.nama);
   const [role, setRole] = useState<"ADMIN" | "CHECKER">(user.role);
@@ -139,6 +143,7 @@ function EditUserDialog({
       else {
         toast.success("Data pengguna diperbarui");
         onOpenChange(false);
+        router.refresh();
       }
     });
   }
@@ -243,6 +248,7 @@ export function UserClientPage({
   users: UserRow[];
   currentUserId: string;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [openCreate, setOpenCreate] = useState(false);
   const [editUser, setEditUser] = useState<UserRow | null>(null);
@@ -254,7 +260,10 @@ export function UserClientPage({
     startTransition(async () => {
       const result = await toggleUserActiveAction(toggleTarget.id, !toggleTarget.is_active);
       if (!result.success) toast.error(result.error);
-      else toast.success(toggleTarget.is_active ? "Pengguna dinonaktifkan" : "Pengguna diaktifkan");
+      else {
+        toast.success(toggleTarget.is_active ? "Pengguna dinonaktifkan" : "Pengguna diaktifkan");
+        router.refresh();
+      }
       setToggleTarget(null);
     });
   }

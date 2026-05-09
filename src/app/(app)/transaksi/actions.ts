@@ -105,7 +105,20 @@ export async function createTransaksiAction(data: TransaksiFormData): Promise<Ac
   );
 
   if (itemErr) {
-    await supabase.from("transaksi").delete().eq("id", inserted.id);
+    // Rollback: hapus header transaksi yang sudah keburu ter-insert.
+    // Pakai .select() agar tahu kalau rollback gagal (mis. RLS reject) →
+    // log warning, tapi tetap return error utama (insert item gagal).
+    const { data: rolledBack } = await supabase
+      .from("transaksi")
+      .delete()
+      .eq("id", inserted.id)
+      .select();
+    if (!rolledBack || rolledBack.length === 0) {
+      console.warn(
+        `[createTransaksiAction] Rollback failed: transaksi ${inserted.id} tetap di DB. ` +
+        `Pastikan migration 00005 (DELETE RLS policy) sudah dijalankan.`
+      );
+    }
     return { success: false, error: itemErr.message };
   }
 
